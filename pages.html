@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page View — Quillora</title>
+  <link rel="stylesheet" href="style.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto&family=Open+Sans&family=Lato&family=Montserrat&family=Oswald&family=Raleway&family=Nunito&family=Merriweather&family=Ubuntu&family=Poppins&family=Quicksand&family=Josefin+Sans&family=Bebas+Neue&family=Anton&family=Righteous&family=Crimson+Text&family=EB+Garamond&family=Libre+Baskerville&family=Abril+Fatface&family=Pacifico&family=Dancing+Script&family=Lobster&family=Satisfy&family=Caveat&family=Permanent+Marker&display=swap"
+    rel="stylesheet">
+  <style>
+    .page-wrap {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    .page-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 500;
+      margin-bottom: 24px;
+      transition: color var(--transition);
+    }
+
+    .page-back:hover { color: var(--accent); }
+
+    .page-title {
+      font-size: clamp(28px, 5vw, 40px);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+      margin-bottom: 10px;
+    }
+
+    .page-meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 32px;
+      font-weight: 500;
+    }
+
+    .page-content {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: var(--shadow);
+    }
+
+    .pv-heading {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin: 20px 0 10px;
+    }
+
+    .pv-subheading {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 16px 0 8px;
+    }
+
+    .pv-text {
+      font-size: 15px;
+      line-height: 1.8;
+      margin-bottom: 14px;
+    }
+
+    .pv-quote {
+      border-left: 3px solid var(--accent);
+      padding: 14px 20px;
+      font-style: italic;
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin: 20px 0;
+      background: var(--surface2);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+
+    .pv-divider {
+      border: none;
+      height: 1px;
+      background: var(--border);
+      margin: 28px 0;
+    }
+
+    .pv-callout {
+      background: var(--accent-light);
+      border: 1px solid var(--accent-glow);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      margin: 14px 0;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .pv-image {
+      max-width: 100%;
+      border-radius: var(--radius-sm);
+      margin: 12px 0 16px;
+      display: block;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 60px 20px;
+    }
+  </style>
+</head>
+
+<body class="dotted-bg">
+
+  <nav class="nav" id="nav"></nav>
+
+  <div class="page">
+    <div class="page-wrap fade-up">
+      <a class="page-back" href="blogs.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Back to posts
+      </a>
+      <div class="page-title" id="page-title">Loading page...</div>
+      <div class="page-meta" id="page-meta"></div>
+      <div class="page-content" id="page-content">
+        <div class="empty-state">Loading content...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    renderNav('blogs');
+
+    const params = new URLSearchParams(window.location.search);
+    const pageId = params.get('id');
+
+    function renderBlock(block) {
+      const style = block.style || '';
+      switch (block.type) {
+        case 'heading':
+          return `<h1 class="pv-heading" style="${style}">${block.content || ''}</h1>`;
+        case 'subheading':
+          return `<h2 class="pv-subheading" style="${style}">${block.content || ''}</h2>`;
+        case 'text':
+          return `<p class="pv-text" style="${style}">${(block.content || '').replace(/\n/g, '<br>')}</p>`;
+        case 'quote':
+          return `<blockquote class="pv-quote" style="${style}">${(block.content || '').replace(/\n/g, '<br>')}</blockquote>`;
+        case 'divider':
+          return `<hr class="pv-divider">`;
+        case 'callout':
+          return `<div class="pv-callout" style="${style}">${(block.content || '').replace(/\n/g, '<br>')}</div>`;
+        case 'image': {
+          if (!block.content) return '';
+          const styleParts = block.style || '';
+          const imgWidth = styleParts.includes('width:') ? styleParts.split('width:')[1].split(';')[0].trim() : '100%';
+          const imgAlign = styleParts.includes('text-align:') ? styleParts.split('text-align:')[1].split(';')[0].trim() : 'left';
+          return `<div style="text-align:${imgAlign};margin:14px 0"><img class="pv-image" src="${block.content}" style="display:inline-block;border-radius:8px;width:${imgWidth};max-width:100%;" alt=""></div>`;
+        }
+        case 'video': {
+          if (!block.content) return '';
+          const vStyle = block.style || '';
+          const vidWidth = vStyle.includes('width:') ? vStyle.split('width:')[1].split(';')[0].trim() : '100%';
+          const vidAlign = vStyle.includes('text-align:') ? vStyle.split('text-align:')[1].split(';')[0].trim() : 'left';
+          if (block.content.startsWith('data:video')) {
+            return `<div style="width:100%;text-align:${vidAlign};margin:16px 0"><video controls style="width:${vidWidth};max-width:100%;border-radius:6px;max-height:400px"><source src="${block.content}"></video></div>`;
+          }
+          return `<div style="width:100%;text-align:${vidAlign};margin:16px 0"><div style="display:inline-block;width:${vidWidth};max-width:100%;position:relative;padding-top:calc(${vidWidth} * 0.5625)"><iframe style="position:absolute;inset:0;width:100%;height:100%;border:none;border-radius:6px" src="${block.content}" allowfullscreen></iframe></div></div>`;
+        }
+        default:
+          return '';
+      }
+    }
+
+    async function loadPage() {
+      const titleEl = document.getElementById('page-title');
+      const metaEl = document.getElementById('page-meta');
+      const contentEl = document.getElementById('page-content');
+
+      if (!pageId) {
+        titleEl.textContent = 'Page not found';
+        metaEl.textContent = '';
+        contentEl.innerHTML = '<div class="empty-state">Missing page id in URL.</div>';
+        return;
+      }
+
+      try {
+        const page = await apiCall(`/pages/${pageId}`);
+        titleEl.textContent = page.title || 'Untitled Page';
+        metaEl.textContent = `Published: ${new Date(page.created_at).toLocaleDateString()}`;
+
+        const layout = Array.isArray(page.layout) ? page.layout : [];
+        if (!layout.length) {
+          contentEl.innerHTML = '<div class="empty-state">This page has no blocks.</div>';
+          return;
+        }
+
+        contentEl.innerHTML = layout.map(renderBlock).join('');
+        document.title = `${page.title || 'Page'} — Quillora`;
+      } catch (err) {
+        titleEl.textContent = 'Unable to load page';
+        metaEl.textContent = '';
+        contentEl.innerHTML = `<div class="empty-state">${err.message}</div>`;
+      }
+    }
+
+    loadPage();
+  </script>
+</body>
+
+</html>

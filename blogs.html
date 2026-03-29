@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explore — Quillora</title>
+<meta name="description" content="Explore posts and stories on Quillora — a modern content management system.">
+<link rel="stylesheet" href="style.css">
+<style>
+  /* ─── HEADER BAR ─────────────────────────────────────────── */
+  .blog-header {
+    padding: 40px 40px 0;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .blog-header-top {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  .blog-header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+
+  .blog-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .search-wrap {
+    position: relative;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    width: 16px;
+    height: 16px;
+    pointer-events: none;
+  }
+
+  #search-input {
+    padding: 8px 14px 8px 36px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    width: 240px;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+
+  #search-input::placeholder { color: var(--muted); }
+  #search-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .post-count-badge {
+    background: var(--surface2);
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ─── POSTS GRID ─────────────────────────────────────────── */
+  .posts-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 40px 60px;
+  }
+
+  .posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .post-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: box-shadow var(--transition), transform var(--transition);
+    animation: fadeUp 0.35s ease both;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .post-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-3px);
+  }
+
+  .post-card-accent {
+    height: 4px;
+    background: var(--gradient-accent);
+  }
+
+  .post-card-body {
+    padding: 24px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .post-card-title {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-bottom: 8px;
+    letter-spacing: -0.2px;
+    color: var(--text);
+  }
+
+  .post-card-excerpt {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 16px;
+    flex: 1;
+  }
+
+  .post-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-top: 1px solid var(--border-light);
+    padding-top: 14px;
+  }
+
+  .post-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .post-avatar {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .post-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .read-time {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .like-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--font);
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: var(--radius-xs);
+    transition: all var(--transition);
+  }
+
+  .like-btn:hover { background: var(--error-light); color: var(--error); }
+  .like-btn.liked { color: var(--error); }
+  .like-btn.liked svg { fill: var(--error); }
+
+  /* ─── EMPTY STATE ────────────────────────────────────────── */
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 20px;
+  }
+
+  .empty-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--accent-light);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+  }
+
+  .empty-icon svg { width: 28px; height: 28px; color: var(--accent); }
+
+  .empty-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .empty-sub {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  /* ─── MODAL ──────────────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 20px;
+    overflow-y: auto;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius);
+    width: 700px;
+    max-width: 100%;
+    animation: fadeUp 0.25s ease;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .modal-header {
+    padding: 32px 32px 24px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .modal-title {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.3;
+    padding-right: 40px;
+  }
+
+  .modal-meta {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .modal-body { padding: 32px; }
+
+  .modal-content {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text);
+  }
+
+  .modal-content h1, .modal-content h2, .modal-content h3 {
+    margin: 20px 0 10px;
+    letter-spacing: -0.3px;
+    font-weight: 700;
+  }
+
+  .modal-content p { margin-bottom: 14px; }
+  .modal-content ul, .modal-content ol { padding-left: 20px; margin-bottom: 14px; }
+  .modal-content li { margin-bottom: 4px; }
+  .modal-content strong { font-weight: 600; }
+  .modal-content a { color: var(--accent); }
+
+  .modal-close {
+    position: absolute;
+    top: 24px; right: 24px;
+    width: 32px; height: 32px;
+    border-radius: var(--radius-xs);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+  }
+
+  .modal-close:hover { background: var(--surface); color: var(--text); }
+
+  /* ─── LIKE & COMMENTS IN MODAL ──────────────────────────── */
+  .modal-actions {
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+  }
+
+  .modal-like-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-family: var(--font);
+    transition: all var(--transition);
+  }
+
+  .modal-like-btn:hover { border-color: var(--error); color: var(--error); }
+  .modal-like-btn.liked { border-color: var(--error); color: var(--error); background: var(--error-light); }
+
+  .comments-section {
+    padding: 24px 32px 32px;
+  }
+
+  .comments-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+
+  .comment-input-wrap {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .comment-input-wrap input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    transition: border-color var(--transition);
+  }
+
+  .comment-input-wrap input:focus { border-color: var(--accent); }
+
+  .comment-input-wrap button {
+    padding: 10px 18px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition);
+    white-space: nowrap;
+  }
+
+  .comment-input-wrap button:hover { background: var(--accent-hover); }
+
+  .comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .comment-item {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    position: relative;
+  }
+
+  .comment-item:hover .comment-del { opacity: 1; }
+
+  .comment-del {
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 22px; height: 22px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all var(--transition);
+  }
+
+  .comment-del:hover {
+    background: var(--error-light);
+    color: var(--error);
+    border-color: var(--error);
+  }
+
+  .comment-author {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .comment-text {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .comment-time {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .no-comments {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    padding: 16px;
+  }
+
+  @media (max-width: 700px) {
+    .posts-section { padding: 20px; }
+    .blog-header { padding: 24px 20px 0; }
+    .blog-header-top { flex-direction: column; align-items: flex-start; }
+    #search-input { width: 100%; }
+    .modal-body, .modal-header, .modal-actions, .comments-section { padding-left: 20px; padding-right: 20px; }
+  }
+</style>
+</head>
+<body class="dotted-bg">
+
+<nav class="nav" id="nav"></nav>
+
+<div class="page">
+  <div class="blog-header fade-up">
+    <div class="blog-header-top">
+      <h1>Explore Posts</h1>
+      <div class="blog-header-right">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search-input" placeholder="Search posts..." oninput="onSearch()">
+        </div>
+        <div class="post-count-badge" id="post-count">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="posts-section">
+    <div class="posts-grid" id="posts-grid">
+      <!-- posts render here -->
+    </div>
+  </div>
+</div>
+
+<!-- Read Post Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-meta" id="modal-meta"></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content" id="modal-content"></div>
+    </div>
+    <div class="modal-actions" id="modal-actions"></div>
+    <div class="comments-section" id="comments-section"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  renderNav('blogs');
+
+  let posts = [];
+  let filteredPosts = [];
+
+  // ─── LIKES (localStorage) ───────────────────────
+  function getLikes() {
+    try { return JSON.parse(localStorage.getItem('quillora_likes') || '{}'); } catch { return {}; }
+  }
+  function setLikes(likes) { localStorage.setItem('quillora_likes', JSON.stringify(likes)); }
+  function getLikeCount(postId) { return (getLikes()[postId] || { count: 0 }).count; }
+  function isLiked(postId) { return !!(getLikes()[postId] || {}).liked; }
+
+  function toggleLike(postId, e) {
+    if (e) e.stopPropagation();
+    const likes = getLikes();
+    if (!likes[postId]) likes[postId] = { count: 0, liked: false };
+    if (likes[postId].liked) {
+      likes[postId].count = Math.max(0, likes[postId].count - 1);
+      likes[postId].liked = false;
+    } else {
+      likes[postId].count++;
+      likes[postId].liked = true;
+    }
+    setLikes(likes);
+    renderPosts();
+  }
+
+  // ─── COMMENTS (localStorage) ────────────────────
+  function getComments(postId) {
+    try { return JSON.parse(localStorage.getItem(`quillora_comments_${postId}`) || '[]'); } catch { return []; }
+  }
+  function saveComments(postId, comments) { localStorage.setItem(`quillora_comments_${postId}`, JSON.stringify(comments)); }
+
+  function addComment(postId) {
+    const input = document.getElementById('comment-input');
+    const text = input.value.trim();
+    if (!text) return;
+    const user = getUser();
+    const comments = getComments(postId);
+    comments.push({
+      author: user ? user.email.split('@')[0] : 'Anonymous',
+      text: text,
+      time: new Date().toISOString()
+    });
+    saveComments(postId, comments);
+    input.value = '';
+    renderComments(postId);
+  }
+
+  function deleteComment(postId, index) {
+    const comments = getComments(postId);
+    comments.splice(index, 1);
+    saveComments(postId, comments);
+    renderComments(postId);
+  }
+
+  function renderComments(postId) {
+    const comments = getComments(postId);
+    const section = document.getElementById('comments-section');
+    section.innerHTML = `
+      <div class="comments-title">Comments (${comments.length})</div>
+      <div class="comment-input-wrap">
+        <input type="text" id="comment-input" placeholder="Write a comment..." onkeydown="if(event.key==='Enter')addComment(${postId})">
+        <button onclick="addComment(${postId})">Post</button>
+      </div>
+      <div class="comments-list">
+        ${comments.length === 0 ? '<div class="no-comments">No comments yet. Be the first!</div>' :
+          comments.map((c, i) => `
+            <div class="comment-item">
+              <button class="comment-del" onclick="deleteComment(${postId}, ${i})" title="Delete">✕</button>
+              <div class="comment-author">${c.author}</div>
+              <div class="comment-text">${c.text}</div>
+              <div class="comment-time">${timeAgo(c.time)}</div>
+            </div>
+          `).join('')
+        }
+      </div>
+    `;
+  }
+
+  // ─── DATA LOADING ───────────────────────────────
+  async function loadPosts() {
+    try {
+      posts = await apiCall('/posts');
+      filteredPosts = posts;
+      renderPosts();
+    } catch (err) {
+      document.getElementById('post-count').textContent = 'Error';
+      document.getElementById('posts-grid').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="empty-title">Couldn't load posts</div>
+          <div class="empty-sub">Make sure your server is running on port 5001</div>
+        </div>
+      `;
+    }
+  }
+
+  function onSearch() {
+    const query = document.getElementById('search-input').value;
+    filteredPosts = searchPosts(query, posts);
+    renderPosts();
+  }
+
+  function timeAgo(dateStr) {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diff = Math.floor((now - d) / 1000);
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  function excerpt(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent.slice(0, 150) + '...';
+  }
+
+  function authorInitials(email) {
+    return email ? email[0].toUpperCase() : 'A';
+  }
+
+  function authorName(email) {
+    return email && email.includes('@') ? email.split('@')[0] : 'Anonymous';
+  }
+
+  // ─── RENDERING ──────────────────────────────────
+  function renderPosts() {
+    const count = filteredPosts.length;
+    const total = posts.length;
+    document.getElementById('post-count').textContent = count === total
+      ? `${count} post${count !== 1 ? 's' : ''}`
+      : `${count} of ${total} posts`;
+
+    if (count === 0) {
+      document.getElementById('posts-grid').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+          <div class="empty-title">${posts.length === 0 ? 'No posts yet' : 'No matching posts'}</div>
+          <div class="empty-sub">${posts.length === 0 ? 'Be the first to publish a story.' : 'Try a different search term.'}</div>
+          ${posts.length === 0 && isLoggedIn() ? `<a class="btn btn-primary" href="editor.html">Write your first post</a>` :
+            posts.length === 0 ? `<a class="btn btn-primary" href="register.html">Get started</a>` : ''}
+        </div>
+      `;
+      return;
+    }
+
+    document.getElementById('posts-grid').innerHTML = filteredPosts.map((p, i) => `
+      <div class="post-card" style="animation-delay:${i * 0.05}s" onclick="openPost(${posts.indexOf(p)})">
+        <div class="post-card-accent"></div>
+        <div class="post-card-body">
+          <div class="post-card-title">${p.title}</div>
+          <div class="post-card-excerpt">${excerpt(p.content)}</div>
+          <div class="post-card-footer">
+            <div class="post-card-meta">
+              <div class="post-avatar">${authorInitials(p.author_email)}</div>
+              <span>${authorName(p.author_email)}</span>
+              <span>·</span>
+              <span>${timeAgo(p.created_at)}</span>
+            </div>
+            <div class="post-card-actions">
+              <span class="read-time">${estimateReadTime(p.content)}</span>
+              <button class="like-btn ${isLiked(p.id) ? 'liked' : ''}" onclick="toggleLike(${p.id}, event)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="${isLiked(p.id) ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                ${getLikeCount(p.id) || ''}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ─── MODAL ──────────────────────────────────────
+  let currentPostIndex = null;
+
+  function openPost(index) {
+    currentPostIndex = index;
+    const p = posts[index];
+    document.getElementById('modal-title').textContent = p.title;
+    document.getElementById('modal-meta').innerHTML =
+      `<span>${authorName(p.author_email)}</span><span>·</span><span>${new Date(p.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span><span>·</span><span>${estimateReadTime(p.content)}</span>`;
+    document.getElementById('modal-content').innerHTML = p.content;
+
+    // Like button in modal
+    document.getElementById('modal-actions').innerHTML = `
+      <button class="modal-like-btn ${isLiked(p.id) ? 'liked' : ''}" onclick="toggleLikeModal(${p.id})">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="${isLiked(p.id) ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        ${isLiked(p.id) ? 'Liked' : 'Like'} ${getLikeCount(p.id) ? '(' + getLikeCount(p.id) + ')' : ''}
+      </button>
+    `;
+
+    renderComments(p.id);
+
+    document.getElementById('modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function toggleLikeModal(postId) {
+    toggleLike(postId);
+    if (currentPostIndex !== null) openPost(currentPostIndex);
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+    document.body.style.overflow = '';
+    currentPostIndex = null;
+  }
+
+  document.getElementById('modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal')) closeModal();
+  });
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  loadPosts();
+</script>
+</body>
+</html>

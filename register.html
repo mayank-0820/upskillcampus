@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up — Quillora</title>
+<meta name="description" content="Create your Quillora account and start publishing.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="auth-page">
+  <div class="auth-form-side">
+    <div class="auth-brand">
+      <div class="auth-brand-icon">Q</div>
+      <div class="auth-brand-text">Quillora</div>
+    </div>
+
+    <div class="auth-subtitle">Start your journey</div>
+    <div class="auth-title">Create your account</div>
+
+    <div class="form-group">
+      <label class="form-label">Email address</label>
+      <input class="form-input" type="email" id="email" placeholder="you@example.com" autofocus>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <div class="pass-wrap">
+        <input class="form-input" type="password" id="password" placeholder="Min. 6 characters" style="padding-right:50px">
+        <button class="pass-toggle" onclick="togglePass('password', this)">Show</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%;padding:12px" onclick="register()">
+      Sign Up
+    </button>
+
+    <div id="error-msg" style="display:none;margin-top:16px;color:var(--error);font-size:13px;padding:10px 14px;background:var(--error-light);border-radius:8px"></div>
+
+    <div class="auth-footer">
+      Have an account? <a href="login.html">Sign in</a>
+    </div>
+  </div>
+
+  <div class="auth-image-side">
+    <!-- Background designs -->
+    <div class="auth-bg-pattern"></div>
+    <div class="auth-bg-crosses"></div>
+    <div class="auth-bg-glow"></div>
+
+    <!-- Floating shapes -->
+    <div class="auth-shape auth-shape-1"></div>
+    <div class="auth-shape auth-shape-2"></div>
+    <div class="auth-shape auth-shape-3"></div>
+    <div class="auth-shape auth-shape-4"></div>
+
+    <!-- Sparkle dots -->
+    <div class="auth-sparkle"></div>
+    <div class="auth-sparkle"></div>
+    <div class="auth-sparkle"></div>
+    <div class="auth-sparkle"></div>
+    <div class="auth-sparkle"></div>
+    <div class="auth-sparkle"></div>
+
+    <!-- Orbiting ring -->
+    <div class="auth-orbit">
+      <div class="auth-orbit-dot"></div>
+      <div class="auth-orbit-dot-2"></div>
+    </div>
+
+    <div class="auth-decoration">
+      <div class="auth-decoration-text">Join our community of creators.</div>
+      <div class="auth-decoration-sub">Start publishing in seconds with a rich text editor, drag-and-drop page builder, and beautiful themes.</div>
+      <div class="auth-decoration-note">Quillora CMS</div>
+
+      <div class="auth-features">
+        <div class="auth-feature">
+          <div class="auth-feature-icon blue">⚡</div>
+          <div>
+            <div class="auth-feature-label">Instant Publishing</div>
+            <div class="auth-feature-sub">Write and publish in seconds</div>
+          </div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon purple">🔒</div>
+          <div>
+            <div class="auth-feature-label">Secure by Design</div>
+            <div class="auth-feature-sub">JWT auth & encrypted passwords</div>
+          </div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon pink">💡</div>
+          <div>
+            <div class="auth-feature-label">Custom Pages</div>
+            <div class="auth-feature-sub">Build anything with drag & drop</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  if (isLoggedIn()) window.location.href = 'blogs.html';
+
+  function togglePass(id, btn) {
+    const el = document.getElementById(id);
+    el.type = el.type === 'password' ? 'text' : 'password';
+    btn.textContent = el.type === 'password' ? 'Show' : 'Hide';
+  }
+
+  async function register() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const errEl = document.getElementById('error-msg');
+    errEl.style.display = 'none';
+
+    if (!email || !password) { showError('Please fill all fields'); return; }
+    if (password.length < 6) { showError('Password must be at least 6 characters'); return; }
+
+    try {
+      const data = await apiCall('/register', 'POST', { email, password });
+      localStorage.setItem('cms_token', data.token);
+      localStorage.setItem('cms_user', JSON.stringify(data.user));
+      window.location.href = 'blogs.html';
+    } catch (err) {
+      showError(err.message);
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') register(); });
+</script>
+</body>
+</html>

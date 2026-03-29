@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Write — Quillora</title>
+  <meta name="description" content="Write and publish your posts on Quillora.">
+  <link rel="stylesheet" href="style.css">
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto&family=Open+Sans&family=Lato&family=Montserrat&family=Oswald&family=Raleway&family=Nunito&family=Merriweather&family=Ubuntu&family=Poppins&family=Quicksand&family=Josefin+Sans&family=Bebas+Neue&family=Anton&family=Righteous&family=Crimson+Text&family=EB+Garamond&family=Libre+Baskerville&family=Abril+Fatface&family=Pacifico&family=Dancing+Script&family=Lobster&family=Satisfy&family=Caveat&family=Permanent+Marker&display=swap"
+    rel="stylesheet">
+  <style>
+    .editor-page {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+
+    /* ─── TOP BAR ─── */
+    .editor-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 24px;
+      gap: 16px;
+    }
+
+    .editor-status {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background var(--transition);
+    }
+
+    .status-dot.saved {
+      background: var(--success);
+    }
+
+    .status-dot.typing {
+      background: #f59e0b;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    .editor-topbar-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* ─── TITLE ─── */
+    .editor-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .editor-title-wrap {
+      padding: 32px 32px 0;
+    }
+
+    #post-title {
+      width: 100%;
+      border: none;
+      outline: none;
+      font-family: var(--font);
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      background: transparent;
+      padding: 0;
+      resize: none;
+      line-height: 1.2;
+    }
+
+    #post-title::placeholder {
+      color: var(--border);
+    }
+
+    .title-divider {
+      margin: 20px 32px;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ─── QUILL OVERRIDES ─── */
+    .ql-toolbar.ql-snow {
+      border: none !important;
+      border-bottom: 1px solid var(--border) !important;
+      padding: 10px 32px !important;
+      background: var(--surface);
+      font-family: var(--font) !important;
+    }
+
+    .ql-container.ql-snow {
+      border: none !important;
+      font-family: var(--font) !important;
+      font-size: 16px !important;
+      line-height: 1.8 !important;
+    }
+
+    #editor-body {
+      min-height: 400px;
+      padding: 0 32px !important;
+    }
+
+    .ql-editor {
+      padding: 24px 0 !important;
+      color: var(--text);
+    }
+
+    .ql-editor.ql-blank::before {
+      color: var(--muted) !important;
+      font-style: normal !important;
+      font-size: 16px;
+      left: 0 !important;
+    }
+
+    /* Dark mode Quill fixes */
+    [data-theme="dark"] .ql-toolbar .ql-stroke {
+      stroke: var(--text-secondary) !important;
+    }
+
+    [data-theme="dark"] .ql-toolbar .ql-fill {
+      fill: var(--text-secondary) !important;
+    }
+
+    [data-theme="dark"] .ql-toolbar .ql-picker-label {
+      color: var(--text-secondary) !important;
+    }
+
+    [data-theme="dark"] .ql-toolbar .ql-picker-options {
+      background: var(--surface) !important;
+      border-color: var(--border) !important;
+    }
+
+    /* ─── STATS + MY POSTS DRAWER ─── */
+    .editor-extras {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .my-posts-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-top: 16px;
+    }
+
+    .my-posts-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    .my-posts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .my-post-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      gap: 8px;
+    }
+
+    .my-post-title {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .my-post-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .edit-btn {
+      height: 26px;
+      padding: 0 10px;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 11px;
+      font-family: var(--font);
+      font-weight: 600;
+      transition: all var(--transition);
+    }
+
+    .edit-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .del-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+    }
+
+    .del-btn:hover {
+      background: var(--error-light);
+      color: var(--error);
+      border-color: var(--error);
+    }
+
+    /* ─── Quill font classes ─── */
+    .ql-font-playfair {
+      font-family: 'Playfair Display', serif !important;
+    }
+
+    .ql-font-dm-mono {
+      font-family: 'DM Mono', monospace !important;
+    }
+
+    .ql-font-georgia {
+      font-family: Georgia, serif !important;
+    }
+
+    .ql-font-arial {
+      font-family: Arial, sans-serif !important;
+    }
+
+    .ql-font-times {
+      font-family: 'Times New Roman', serif !important;
+    }
+
+    .ql-font-courier {
+      font-family: 'Courier New', monospace !important;
+    }
+
+    .ql-font-impact {
+      font-family: Impact, sans-serif !important;
+    }
+
+    .ql-font-roboto {
+      font-family: 'Roboto', sans-serif !important;
+    }
+
+    .ql-font-open-sans {
+      font-family: 'Open Sans', sans-serif !important;
+    }
+
+    .ql-font-lato {
+      font-family: 'Lato', sans-serif !important;
+    }
+
+    .ql-font-montserrat {
+      font-family: 'Montserrat', sans-serif !important;
+    }
+
+    .ql-font-oswald {
+      font-family: 'Oswald', sans-serif !important;
+    }
+
+    .ql-font-raleway {
+      font-family: 'Raleway', sans-serif !important;
+    }
+
+    .ql-font-nunito {
+      font-family: 'Nunito', sans-serif !important;
+    }
+
+    .ql-font-merriweather {
+      font-family: 'Merriweather', serif !important;
+    }
+
+    .ql-font-ubuntu {
+      font-family: 'Ubuntu', sans-serif !important;
+    }
+
+    .ql-font-poppins {
+      font-family: 'Poppins', sans-serif !important;
+    }
+
+    .ql-font-quicksand {
+      font-family: 'Quicksand', sans-serif !important;
+    }
+
+    .ql-font-josefin-sans {
+      font-family: 'Josefin Sans', sans-serif !important;
+    }
+
+    .ql-font-bebas-neue {
+      font-family: 'Bebas Neue', sans-serif !important;
+    }
+
+    .ql-font-anton {
+      font-family: 'Anton', sans-serif !important;
+    }
+
+    .ql-font-righteous {
+      font-family: 'Righteous', sans-serif !important;
+    }
+
+    .ql-font-crimson-text {
+      font-family: 'Crimson Text', serif !important;
+    }
+
+    .ql-font-eb-garamond {
+      font-family: 'EB Garamond', serif !important;
+    }
+
+    .ql-font-libre-baskerville {
+      font-family: 'Libre Baskerville', serif !important;
+    }
+
+    .ql-font-abril-fatface {
+      font-family: 'Abril Fatface', serif !important;
+    }
+
+    .ql-font-pacifico {
+      font-family: 'Pacifico', cursive !important;
+    }
+
+    .ql-font-dancing-script {
+      font-family: 'Dancing Script', cursive !important;
+    }
+
+    .ql-font-lobster {
+      font-family: 'Lobster', cursive !important;
+    }
+
+    .ql-font-satisfy {
+      font-family: 'Satisfy', cursive !important;
+    }
+
+    .ql-font-caveat {
+      font-family: 'Caveat', cursive !important;
+    }
+
+    .ql-font-permanent-marker {
+      font-family: 'Permanent Marker', cursive !important;
+    }
+
+    /* Picker labels */
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='roboto']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='roboto']::before {
+      content: 'Roboto';
+      font-family: 'Roboto';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='open-sans']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='open-sans']::before {
+      content: 'Open Sans';
+      font-family: 'Open Sans';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='lato']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='lato']::before {
+      content: 'Lato';
+      font-family: 'Lato';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='montserrat']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='montserrat']::before {
+      content: 'Montserrat';
+      font-family: 'Montserrat';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='oswald']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='oswald']::before {
+      content: 'Oswald';
+      font-family: 'Oswald';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='raleway']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='raleway']::before {
+      content: 'Raleway';
+      font-family: 'Raleway';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='nunito']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='nunito']::before {
+      content: 'Nunito';
+      font-family: 'Nunito';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='merriweather']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='merriweather']::before {
+      content: 'Merriweather';
+      font-family: 'Merriweather';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='ubuntu']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='ubuntu']::before {
+      content: 'Ubuntu';
+      font-family: 'Ubuntu';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='poppins']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='poppins']::before {
+      content: 'Poppins';
+      font-family: 'Poppins';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='quicksand']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='quicksand']::before {
+      content: 'Quicksand';
+      font-family: 'Quicksand';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='josefin-sans']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='josefin-sans']::before {
+      content: 'Josefin Sans';
+      font-family: 'Josefin Sans';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='bebas-neue']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='bebas-neue']::before {
+      content: 'Bebas Neue';
+      font-family: 'Bebas Neue';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='anton']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='anton']::before {
+      content: 'Anton';
+      font-family: 'Anton';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='righteous']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='righteous']::before {
+      content: 'Righteous';
+      font-family: 'Righteous';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='crimson-text']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='crimson-text']::before {
+      content: 'Crimson Text';
+      font-family: 'Crimson Text';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='eb-garamond']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='eb-garamond']::before {
+      content: 'EB Garamond';
+      font-family: 'EB Garamond';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='libre-baskerville']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='libre-baskerville']::before {
+      content: 'Libre Baskerville';
+      font-family: 'Libre Baskerville';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='abril-fatface']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='abril-fatface']::before {
+      content: 'Abril Fatface';
+      font-family: 'Abril Fatface';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='pacifico']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='pacifico']::before {
+      content: 'Pacifico';
+      font-family: 'Pacifico';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='dancing-script']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='dancing-script']::before {
+      content: 'Dancing Script';
+      font-family: 'Dancing Script';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='lobster']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='lobster']::before {
+      content: 'Lobster';
+      font-family: 'Lobster';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='satisfy']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='satisfy']::before {
+      content: 'Satisfy';
+      font-family: 'Satisfy';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='caveat']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='caveat']::before {
+      content: 'Caveat';
+      font-family: 'Caveat';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='permanent-marker']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='permanent-marker']::before {
+      content: 'Permanent Marker';
+      font-family: 'Permanent Marker';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='playfair']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='playfair']::before {
+      content: 'Playfair Display';
+      font-family: 'Playfair Display', serif;
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='dm-mono']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='dm-mono']::before {
+      content: 'DM Mono';
+      font-family: 'DM Mono', monospace;
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='georgia']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='georgia']::before {
+      content: 'Georgia';
+      font-family: Georgia, serif;
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='arial']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='arial']::before {
+      content: 'Arial';
+      font-family: Arial, sans-serif;
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='times']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='times']::before {
+      content: 'Times New Roman';
+      font-family: 'Times New Roman', serif;
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='courier']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='courier']::before {
+      content: 'Courier New';
+      font-family: 'Courier New', monospace;
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label[data-value='impact']::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='impact']::before {
+      content: 'Impact';
+      font-family: Impact, sans-serif;
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-label:not([data-value])::before,
+    .ql-snow .ql-picker.ql-font .ql-picker-item:not([data-value])::before {
+      content: 'Default';
+    }
+
+    .ql-snow .ql-picker.ql-font .ql-picker-options {
+      max-height: 200px;
+      overflow-y: scroll;
+      position: absolute;
+      z-index: 9999;
+    }
+  </style>
+</head>
+
+<body class="dotted-bg">
+
+  <nav class="nav" id="nav"></nav>
+
+  <div class="page">
+    <div class="editor-page fade-up">
+
+      <div class="editor-topbar">
+        <div class="editor-status">
+          <div class="status-dot" id="status-dot"></div>
+          <span id="status-text">Ready to write</span>
+        </div>
+        <div class="editor-topbar-actions">
+          <button class="btn btn-secondary" onclick="clearEditor()">Clear</button>
+          <button class="btn btn-primary" id="publish-btn-top" onclick="publishPost()">Publish</button>
+        </div>
+      </div>
+
+      <div class="editor-card">
+        <div class="editor-title-wrap">
+          <textarea id="post-title" placeholder="Your post title..." rows="1"
+            oninput="autoResize(this);updateStatus()"></textarea>
+        </div>
+
+        <div class="title-divider"></div>
+
+        <div id="editor-body"></div>
+      </div>
+
+      <div class="editor-extras">
+        <div class="stat-card">
+          <div class="stat-value" id="wc-words">0</div>
+          <div class="stat-label">Words</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="wc-chars">0</div>
+          <div class="stat-label">Characters</div>
+        </div>
+      </div>
+
+      <div class="my-posts-card">
+        <div class="my-posts-title">My Posts</div>
+        <div class="my-posts-list" id="my-posts-list">
+          <div style="font-size:13px;color:var(--muted)">Loading...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+  <script src="app.js"></script>
+  <script>
+    if (!isLoggedIn()) window.location.href = 'login.html';
+    renderNav('editor');
+
+    let editingPostId = null;
+    let myPosts = [];
+
+    // Register custom fonts with Quill
+    const FontAttributor = Quill.import('attributors/class/font');
+    FontAttributor.whitelist = [
+      'playfair', 'dm-mono', 'georgia', 'arial', 'times', 'courier', 'impact',
+      'roboto', 'open-sans', 'lato', 'montserrat', 'oswald', 'raleway', 'nunito',
+      'merriweather', 'ubuntu', 'poppins', 'quicksand', 'josefin-sans', 'bebas-neue',
+      'anton', 'righteous', 'crimson-text', 'eb-garamond', 'libre-baskerville',
+      'abril-fatface', 'pacifico', 'dancing-script', 'lobster', 'satisfy', 'caveat',
+      'permanent-marker'
+    ];
+    Quill.register(FontAttributor, true);
+
+    const quill = new Quill('#editor-body', {
+      theme: 'snow',
+      placeholder: '            Start writing your story here...',
+      modules: {
+        toolbar: [
+          [{
+            font: ['', 'playfair', 'dm-mono', 'georgia', 'arial', 'times', 'courier', 'impact',
+              'roboto', 'open-sans', 'lato', 'montserrat', 'oswald', 'raleway', 'nunito',
+              'merriweather', 'ubuntu', 'poppins', 'quicksand', 'josefin-sans', 'bebas-neue',
+              'anton', 'righteous', 'crimson-text', 'eb-garamond', 'libre-baskerville',
+              'abril-fatface', 'pacifico', 'dancing-script', 'lobster', 'satisfy', 'caveat',
+              'permanent-marker']
+          }],
+          [{ header: [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          ['blockquote', 'code-block'],
+          ['link'],
+          ['clean']
+        ]
+      }
+    });
+
+    quill.on('text-change', () => {
+      updateWordCount();
+      updateStatus();
+    });
+
+    function updateWordCount() {
+      const text = quill.getText().trim();
+      const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+      const chars = text.length;
+      document.getElementById('wc-words').textContent = words;
+      document.getElementById('wc-chars').textContent = chars;
+    }
+
+    let statusTimer;
+    function updateStatus() {
+      const dot = document.getElementById('status-dot');
+      const txt = document.getElementById('status-text');
+      dot.className = 'status-dot typing';
+      txt.textContent = 'Typing...';
+      clearTimeout(statusTimer);
+      statusTimer = setTimeout(() => {
+        dot.className = 'status-dot';
+        txt.textContent = editingPostId ? 'Editing post' : 'Draft';
+      }, 1500);
+    }
+
+    function autoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+    }
+
+    function setEditorMode() {
+      const topBtn = document.getElementById('publish-btn-top');
+      const dot = document.getElementById('status-dot');
+      const txt = document.getElementById('status-text');
+
+      if (editingPostId) {
+        topBtn.textContent = 'Update Post';
+        dot.className = 'status-dot';
+        txt.textContent = 'Editing post';
+        return;
+      }
+
+      topBtn.textContent = 'Publish';
+      dot.className = 'status-dot';
+      txt.textContent = 'Ready to write';
+    }
+
+    function resetEditor() {
+      editingPostId = null;
+      document.getElementById('post-title').value = '';
+      quill.setContents([]);
+      updateWordCount();
+      setEditorMode();
+    }
+
+    function clearEditor() {
+      if (!confirm('Clear the editor? This will remove your current draft.')) return;
+      resetEditor();
+    }
+
+    function editPost(id) {
+      const post = myPosts.find(p => String(p.id) === String(id));
+      if (!post) {
+        showToast('Post not found', 'error');
+        return;
+      }
+      editingPostId = id;
+      document.getElementById('post-title').value = post.title || '';
+      quill.root.innerHTML = post.content || '';
+      autoResize(document.getElementById('post-title'));
+      updateWordCount();
+      setEditorMode();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function publishPost() {
+      const title = document.getElementById('post-title').value.trim();
+      const content = quill.root.innerHTML;
+      const text = quill.getText().trim();
+
+      if (!title) {
+        showToast('Please add a title', 'error');
+        return;
+      }
+      if (!text || text.length < 10) {
+        showToast('Please write some content', 'error');
+        return;
+      }
+
+      try {
+        const dot = document.getElementById('status-dot');
+        const txt = document.getElementById('status-text');
+        dot.className = 'status-dot typing';
+        txt.textContent = editingPostId ? 'Updating...' : 'Publishing...';
+
+        if (editingPostId) {
+          await apiCall(`/posts/${editingPostId}`, 'PUT', { title, content });
+          txt.textContent = 'Updated!';
+          showToast('Post updated successfully!', 'success');
+        } else {
+          await apiCall('/posts', 'POST', { title, content });
+          txt.textContent = 'Published!';
+          showToast('Post published successfully!', 'success');
+        }
+
+        dot.className = 'status-dot saved';
+        resetEditor();
+        loadMyPosts();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function loadMyPosts() {
+      const el = document.getElementById('my-posts-list');
+      try {
+        const posts = await apiCall('/posts');
+        const user = getUser();
+        myPosts = posts.filter(
+          p => user && p.author_email && p.author_email.toLowerCase() === user.email.toLowerCase()
+        );
+
+        if (myPosts.length === 0) {
+          el.innerHTML = `<div style="font-size:13px;color:var(--muted)">No posts yet</div>`;
+          return;
+        }
+
+        el.innerHTML = myPosts.map(p => `
+      <div class="my-post-item">
+        <span class="my-post-title">${p.title}</span>
+        <div class="my-post-actions">
+          <button class="edit-btn" onclick="editPost(${p.id})" title="Edit">Edit</button>
+          <button class="del-btn" onclick="deletePost(${p.id})" title="Delete">✕</button>
+        </div>
+      </div>
+    `).join('');
+      } catch {
+        el.innerHTML = `<div style="font-size:13px;color:var(--muted)">Error loading</div>`;
+      }
+    }
+
+    async function deletePost(id) {
+      if (!confirm('Delete this post?')) return;
+      try {
+        await apiCall(`/posts/${id}`, 'DELETE');
+        if (editingPostId === id) resetEditor();
+        showToast('Post deleted', 'success');
+        loadMyPosts();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    setEditorMode();
+    loadMyPosts();
+  </script>
+</body>
+
+</html>

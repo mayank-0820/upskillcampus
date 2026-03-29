@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Quillora</title>
+<meta name="description" content="Sign in to your Quillora account.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="auth-page">
+  <div class="auth-form-side">
+    <div class="auth-brand">
+      <div class="auth-brand-icon">Q</div>
+      <div class="auth-brand-text">Quillora</div>
+    </div>
+
+    <div class="auth-subtitle">Welcome back</div>
+    <div class="auth-title">Sign in to Quillora</div>
+
+    <div class="form-group">
+      <label class="form-label">Email address</label>
+      <input class="form-input" type="email" id="email" placeholder="you@example.com" autofocus>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <div class="pass-wrap">
+        <input class="form-input" type="password" id="password" placeholder="Your password" style="padding-right:50px">
+        <button class="pass-toggle" onclick="togglePass('password', this)">Show</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%;padding:12px" onclick="login()">
+      Sign In
+    </button>
+
+    <a href="#" onclick="toggleForgot(event)" style="display:inline-block;margin-top:14px;font-size:13px;color:var(--muted);text-decoration:none;font-weight:500">Forgot password?</a>
+
+    <div id="forgot-form" style="display:none;margin-top:16px">
+      <label class="form-label">Enter your email</label>
+      <input class="form-input" type="email" id="reset-email" placeholder="you@example.com">
+      <button class="btn btn-primary" style="width:100%;padding:12px;margin-top:10px" onclick="forgotPassword()">
+        Send Reset Link
+      </button>
+      <div id="forgot-msg" style="display:none;margin-top:12px;font-size:13px;padding:10px 14px;border-radius:8px"></div>
+    </div>
+
+    <div id="error-msg" style="display:none;margin-top:16px;color:var(--error);font-size:13px;padding:10px 14px;background:var(--error-light);border-radius:8px"></div>
+
+    <div class="auth-footer">
+      Don't have an account? <a href="register.html">Sign up</a>
+    </div>
+  </div>
+
+  <div class="auth-image-side">
+    <!-- Background designs -->
+    <div class="auth-bg-pattern"></div>
+    <div class="auth-bg-crosses"></div>
+    <div class="auth-bg-glow"></div>
+
+    <!-- Floating shapes -->
+    <div class="auth-shape auth-shape-1"></div>
+    <div class="auth-shape auth-shape-2"></div>
+    <div class="auth-shape auth-shape-3"></div>
+    <div class="auth-shape auth-shape-4"></div>
+
+    <!-- Sparkle dots -->
+    <div class="auth-sparkle"></div>
+    <div class="auth-sparkle"></div>
+    <div class="auth-sparkle"></div>
+    <div class="auth-sparkle"></div>
+    <div class="auth-sparkle"></div>
+    <div class="auth-sparkle"></div>
+
+    <!-- Orbiting ring -->
+    <div class="auth-orbit">
+      <div class="auth-orbit-dot"></div>
+      <div class="auth-orbit-dot-2"></div>
+    </div>
+
+    <div class="auth-decoration">
+      <div class="auth-decoration-text">Your stories deserve a beautiful home.</div>
+      <div class="auth-decoration-sub">Publish articles, build custom pages, and share your ideas with a modern CMS built for creators.</div>
+      <div class="auth-decoration-note">Quillora CMS</div>
+
+      <div class="auth-features">
+        <div class="auth-feature">
+          <div class="auth-feature-icon blue">📝</div>
+          <div>
+            <div class="auth-feature-label">Rich Text Editor</div>
+            <div class="auth-feature-sub">Write with a powerful Quill.js editor</div>
+          </div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon purple">🎨</div>
+          <div>
+            <div class="auth-feature-label">Page Builder</div>
+            <div class="auth-feature-sub">Drag & drop to build custom pages</div>
+          </div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon pink">🌙</div>
+          <div>
+            <div class="auth-feature-label">Dark Mode</div>
+            <div class="auth-feature-sub">Beautiful in any lighting</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  if (isLoggedIn()) window.location.href = 'blogs.html';
+
+  function togglePass(id, btn) {
+    const el = document.getElementById(id);
+    el.type = el.type === 'password' ? 'text' : 'password';
+    btn.textContent = el.type === 'password' ? 'Show' : 'Hide';
+  }
+
+  function toggleForgot(e) {
+    e.preventDefault();
+    const form = document.getElementById('forgot-form');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+  }
+
+  async function forgotPassword() {
+    const email = document.getElementById('reset-email').value.trim();
+    const msgEl = document.getElementById('forgot-msg');
+    if (!email) {
+      msgEl.textContent = 'Please enter your email';
+      msgEl.style.display = 'block';
+      msgEl.style.background = 'var(--error-light)';
+      msgEl.style.color = 'var(--error)';
+      return;
+    }
+    try {
+      const data = await apiCall('/forgot-password', 'POST', { email });
+      msgEl.textContent = data.message;
+      msgEl.style.display = 'block';
+      msgEl.style.background = 'var(--success-light)';
+      msgEl.style.color = 'var(--success)';
+    } catch (err) {
+      msgEl.textContent = err.message;
+      msgEl.style.display = 'block';
+      msgEl.style.background = 'var(--error-light)';
+      msgEl.style.color = 'var(--error)';
+    }
+  }
+
+  async function login() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!email || !password) { showError('Please fill all fields'); return; }
+
+    try {
+      const data = await apiCall('/login', 'POST', { email, password });
+      localStorage.setItem('cms_token', data.token);
+      localStorage.setItem('cms_user', JSON.stringify(data.user));
+      window.location.href = 'blogs.html';
+    } catch (err) {
+      showError(err.message);
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+</script>
+</body>
+</html>

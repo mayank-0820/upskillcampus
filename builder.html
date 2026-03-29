@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Builder — Quillora</title>
+  <meta name="description" content="Build custom pages with Quillora's drag-and-drop page builder.">
+  <link rel="stylesheet" href="style.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto&family=Open+Sans&family=Lato&family=Montserrat&family=Oswald&family=Raleway&family=Nunito&family=Merriweather&family=Ubuntu&family=Poppins&family=Quicksand&family=Josefin+Sans&family=Bebas+Neue&family=Anton&family=Righteous&family=Crimson+Text&family=EB+Garamond&family=Libre+Baskerville&family=Abril+Fatface&family=Pacifico&family=Dancing+Script&family=Lobster&family=Satisfy&family=Caveat&family=Permanent+Marker&display=swap"
+    rel="stylesheet">
+  <style>
+    .builder-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr 240px;
+      min-height: calc(100vh - 56px);
+    }
+
+    /* ─── LEFT PANEL ─── */
+    .blocks-panel {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 20px;
+      position: sticky;
+      top: 56px;
+      height: calc(100vh - 56px);
+      overflow-y: auto;
+    }
+
+    .panel-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .block-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 6px;
+      cursor: grab;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all var(--transition);
+      user-select: none;
+      color: var(--text);
+    }
+
+    .block-item:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateX(2px);
+    }
+
+    .block-item:active { cursor: grabbing; }
+
+    .block-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--accent-light);
+      color: var(--accent);
+      border-radius: var(--radius-xs);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* ─── CANVAS ─── */
+    .canvas-wrap {
+      background: var(--bg);
+      padding: 28px;
+      min-height: calc(100vh - 56px);
+      background-image: radial-gradient(circle, var(--dot-color) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    .canvas-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 16px;
+    }
+
+    .canvas-title-input {
+      border: none;
+      outline: none;
+      font-family: var(--font);
+      font-size: 18px;
+      font-weight: 700;
+      background: transparent;
+      color: var(--text);
+      width: 300px;
+      border-bottom: 2px solid var(--border);
+      padding: 6px 0;
+      transition: border-color var(--transition);
+    }
+
+    .canvas-title-input:focus { border-color: var(--accent); }
+
+    .canvas {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      min-height: 500px;
+      padding: 28px;
+      position: relative;
+      box-shadow: var(--shadow);
+      transition: all var(--transition);
+    }
+
+    .canvas.drag-over {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .canvas-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      pointer-events: none;
+      gap: 8px;
+    }
+
+    .canvas-empty-icon { font-size: 40px; opacity: 0.4; }
+
+    .canvas-empty-text {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    /* ─── BLOCK ELEMENTS ─── */
+    .canvas-block {
+      position: relative;
+      margin-bottom: 12px;
+      border: 1.5px solid transparent;
+      border-radius: var(--radius-sm);
+      transition: border-color var(--transition);
+      cursor: move;
+    }
+
+    .canvas-block:hover { border-color: var(--border); }
+    .canvas-block.selected { border-color: var(--accent); }
+    .canvas-block.dragging { opacity: 0.4; }
+
+    .block-controls {
+      position: absolute;
+      top: -12px;
+      right: 8px;
+      display: none;
+      gap: 3px;
+      z-index: 10;
+    }
+
+    .canvas-block:hover .block-controls,
+    .canvas-block.selected .block-controls { display: flex; }
+
+    .block-ctrl-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+    }
+
+    .block-ctrl-btn:hover { background: var(--surface2); color: var(--text); }
+    .block-ctrl-btn.del:hover { background: var(--error-light); color: var(--error); border-color: var(--error); }
+
+    /* Block type renderings */
+    .b-heading {
+      font-family: var(--font);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      padding: 10px 14px;
+      outline: none;
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .b-subheading {
+      font-family: var(--font);
+      font-size: 20px;
+      font-weight: 700;
+      padding: 8px 14px;
+      outline: none;
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .b-text {
+      font-size: 15px;
+      line-height: 1.8;
+      padding: 8px 14px;
+      outline: none;
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      resize: none;
+      min-height: 72px;
+      font-family: var(--font);
+    }
+
+    .b-quote {
+      border-left: 3px solid var(--accent);
+      padding: 14px 18px;
+      font-size: 16px;
+      font-style: italic;
+      color: var(--text-secondary);
+      background: var(--surface2);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin: 4px 0;
+      outline: none;
+      width: 100%;
+      border-top: none;
+      border-right: none;
+      border-bottom: none;
+      resize: none;
+      min-height: 56px;
+      font-family: var(--font);
+    }
+
+    .b-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 8px 14px;
+    }
+
+    .b-image-placeholder {
+      background: var(--surface2);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      margin: 4px;
+    }
+
+    .b-image-placeholder:hover { border-color: var(--accent); }
+    .b-image-placeholder input[type=file] { display: none; }
+    .b-image-placeholder img { max-width: 100%; border-radius: 6px; display: block; }
+
+    .b-image-wrap {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .b-resize-handle {
+      width: 12px;
+      height: 12px;
+      background: var(--accent);
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      cursor: se-resize;
+      border-radius: 2px;
+      z-index: 5;
+    }
+
+    .b-video-wrap-resize {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .b-video-resize-handle {
+      width: 12px;
+      height: 12px;
+      background: var(--accent);
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      cursor: se-resize;
+      border-radius: 2px;
+      z-index: 5;
+    }
+
+    .b-callout {
+      background: var(--accent-light);
+      border: 1px solid var(--accent-glow);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin: 4px;
+    }
+
+    .b-callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+
+    .b-callout-text {
+      flex: 1;
+      outline: none;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text);
+      font-family: var(--font);
+      resize: none;
+      min-height: 36px;
+      width: 100%;
+    }
+
+    .drop-zone {
+      height: 28px;
+      border: 2px dashed transparent;
+      border-radius: 6px;
+      margin: 4px 0;
+      transition: all var(--transition);
+    }
+
+    .drop-zone.active {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    /* ─── RIGHT PANEL ─── */
+    .props-panel {
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      padding: 20px;
+      position: sticky;
+      top: 56px;
+      height: calc(100vh - 56px);
+      overflow-y: auto;
+    }
+
+    .prop-group { margin-bottom: 18px; }
+
+    .prop-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .color-row { display: flex; gap: 5px; flex-wrap: wrap; }
+
+    .color-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform var(--transition);
+    }
+
+    .color-dot:hover { transform: scale(1.15); }
+    .color-dot.active { border-color: var(--text); }
+
+    .align-row { display: flex; gap: 4px; }
+
+    .align-btn {
+      flex: 1;
+      padding: 7px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      background: none;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all var(--transition);
+      color: var(--text-secondary);
+    }
+
+    .align-btn:hover, .align-btn.active {
+      background: var(--accent-light);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .pages-saved { display: flex; flex-direction: column; gap: 6px; }
+
+    .saved-page-item {
+      display: grid;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+    }
+
+    .saved-page-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .saved-page-title {
+      font-size: 12px;
+      font-weight: 600;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text);
+    }
+
+    .saved-page-date {
+      font-size: 10px;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .saved-page-actions { display: flex; align-items: center; gap: 4px; }
+
+    .saved-page-btn {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      background: var(--surface);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-family: var(--font);
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: all var(--transition);
+      font-weight: 500;
+    }
+
+    .saved-page-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .saved-page-btn.danger:hover { border-color: var(--error); color: var(--error); }
+
+    .saved-page-item.editing {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    /* ─── Custom font select ─── */
+    .custom-font-select { position: relative; width: 100%; }
+
+    .custom-font-btn {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font);
+    }
+
+    .custom-font-btn:hover { border-color: var(--accent); }
+
+    .custom-font-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 9999;
+      display: none;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .custom-font-dropdown.open { display: block; }
+
+    .custom-font-option {
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background var(--transition);
+      color: var(--text);
+    }
+
+    .custom-font-option:hover { background: var(--surface2); }
+    .custom-font-option.active { background: var(--accent-light); color: var(--accent); }
+  </style>
+</head>
+
+<body>
+
+  <nav class="nav" id="nav"></nav>
+
+  <div class="page">
+    <div class="builder-layout">
+
+      <!-- LEFT: Block types -->
+      <div class="blocks-panel">
+        <div class="panel-title">Blocks</div>
+
+        <div class="panel-title" style="margin-top:16px">Text</div>
+        <div class="block-item" draggable="true" data-type="heading">
+          <span class="block-icon">H</span> Heading
+        </div>
+        <div class="block-item" draggable="true" data-type="subheading">
+          <span class="block-icon">h</span> Subheading
+        </div>
+        <div class="block-item" draggable="true" data-type="text">
+          <span class="block-icon">P</span> Paragraph
+        </div>
+        <div class="block-item" draggable="true" data-type="quote">
+          <span class="block-icon">"</span> Quote
+        </div>
+
+        <div class="panel-title" style="margin-top:16px">Layout</div>
+        <div class="block-item" draggable="true" data-type="divider">
+          <span class="block-icon">—</span> Divider
+        </div>
+        <div class="block-item" draggable="true" data-type="callout">
+          <span class="block-icon">!</span> Callout
+        </div>
+        <div class="block-item" draggable="true" data-type="image">
+          <span class="block-icon">☐</span> Image
+        </div>
+        <div class="block-item" draggable="true" data-type="video">
+          <span class="block-icon">▶</span> Video
+        </div>
+
+        <div class="divider" style="margin:16px 0"></div>
+        <button class="btn btn-secondary" id="clear-btn" style="width:100%;font-size:12px">
+          Clear Canvas
+        </button>
+      </div>
+
+      <!-- CENTER: Canvas -->
+      <div class="canvas-wrap">
+        <div class="canvas-topbar">
+          <input class="canvas-title-input" type="text" id="page-title" placeholder="Untitled Page">
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary" id="preview-btn">Preview</button>
+            <button class="btn btn-primary" id="save-btn">Save Page</button>
+          </div>
+        </div>
+
+        <div class="canvas" id="canvas">
+          <div class="canvas-empty" id="canvas-empty">
+            <div class="canvas-empty-icon">☐</div>
+            <div class="canvas-empty-text">Drag blocks here to build your page</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Properties -->
+      <div class="props-panel">
+        <div class="panel-title">Properties</div>
+
+        <div id="no-selection" style="font-size:12px;color:var(--muted);margin-top:8px">
+          Select a block to edit properties
+        </div>
+
+        <div id="block-props" style="display:none">
+          <div class="prop-group">
+            <div class="prop-label">Alignment</div>
+            <div class="align-row">
+              <button class="align-btn active" onclick="setAlign('left', this)">L</button>
+              <button class="align-btn" onclick="setAlign('center', this)">C</button>
+              <button class="align-btn" onclick="setAlign('right', this)">R</button>
+            </div>
+          </div>
+
+          <div class="prop-group">
+            <div class="prop-label">Text Color</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <input type="color" id="color-picker" value="#1a1a1a" oninput="applyPickerColor(this.value)"
+                style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border);cursor:pointer;padding:2px;background:none;-webkit-appearance:none;appearance:none">
+              <span style="font-size:12px;color:var(--muted)">Custom</span>
+            </div>
+            <div class="color-row">
+              <div class="color-dot active" style="background:#1a1a1a" onclick="setColor('#1a1a1a', this)"></div>
+              <div class="color-dot" style="background:#2563eb" onclick="setColor('#2563eb', this)"></div>
+              <div class="color-dot" style="background:#10b981" onclick="setColor('#10b981', this)"></div>
+              <div class="color-dot" style="background:#ef4444" onclick="setColor('#ef4444', this)"></div>
+              <div class="color-dot" style="background:#64748b" onclick="setColor('#64748b', this)"></div>
+              <div class="color-dot" style="background:#f59e0b" onclick="setColor('#f59e0b', this)"></div>
+              <div class="color-dot" style="background:#8b5cf6" onclick="setColor('#8b5cf6', this)"></div>
+              <div class="color-dot" style="background:#ffffff;border:1px solid var(--border)" onclick="setColor('#ffffff', this)"></div>
+            </div>
+          </div>
+
+          <div class="prop-group">
+            <div class="prop-label">Font</div>
+            <div class="custom-font-select" id="font-select-wrap">
+              <button class="custom-font-btn" id="font-select-btn" onclick="toggleFontDropdown()">
+                <span id="font-select-label">Default</span>
+                <span>▾</span>
+              </button>
+              <div class="custom-font-dropdown" id="font-dropdown"></div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <button class="btn btn-danger" style="width:100%;font-size:12px" onclick="deleteSelected()">
+            Delete Block
+          </button>
+        </div>
+
+        <div class="divider" style="margin:24px 0"></div>
+
+        <div class="panel-title">Saved Pages</div>
+        <div class="pages-saved" id="saved-pages-list">
+          <div style="font-size:11px;color:var(--muted)">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if (!isLoggedIn()) window.location.href = 'login.html';
+    renderNav('builder');
+
+    let dragType = null;
+    let selectedBlock = null;
+    let blockIdCounter = 0;
+    let editingPageId = null;
+    let myPages = [];
+
+    const canvas = document.getElementById('canvas');
+    const emptyState = document.getElementById('canvas-empty');
+    const pageTitleInput = document.getElementById('page-title');
+    const saveBtn = document.getElementById('save-btn');
+
+    canvas.addEventListener('dragover', onCanvasDragOver);
+    canvas.addEventListener('drop', onCanvasDrop);
+    canvas.addEventListener('dragleave', onCanvasDragLeave);
+    document.getElementById('clear-btn').addEventListener('click', startNewPage);
+    document.getElementById('preview-btn').addEventListener('click', previewPage);
+    saveBtn.addEventListener('click', savePage);
+
+    function setBuilderMode() {
+      saveBtn.textContent = editingPageId ? 'Update Page' : 'Save Page';
+    }
+
+    function clearCanvasBlocks() {
+      document.querySelectorAll('.canvas-block').forEach(b => b.remove());
+      selectedBlock = null;
+      document.getElementById('no-selection').style.display = 'block';
+      document.getElementById('block-props').style.display = 'none';
+      updateEmptyState();
+    }
+
+    function startNewPage() {
+      if (!confirm('Start a new page? Unsaved changes will be lost.')) return;
+      editingPageId = null;
+      pageTitleInput.value = '';
+      clearCanvasBlocks();
+      setBuilderMode();
+      loadSavedPages();
+    }
+
+    document.querySelectorAll('.block-item').forEach(item => {
+      item.addEventListener('click', () => addBlock(item.dataset.type));
+      item.addEventListener('dragstart', e => {
+        dragType = item.dataset.type;
+        if (e.dataTransfer) {
+          e.dataTransfer.setData('text/plain', dragType);
+          e.dataTransfer.effectAllowed = 'copy';
+        }
+      });
+    });
+
+    function onCanvasDragOver(e) {
+      e.preventDefault();
+      canvas.classList.add('drag-over');
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+    }
+
+    function onCanvasDragLeave(e) {
+      if (!canvas.contains(e.relatedTarget)) canvas.classList.remove('drag-over');
+    }
+
+    function onCanvasDrop(e) {
+      e.preventDefault();
+      canvas.classList.remove('drag-over');
+      const droppedType = (e.dataTransfer && e.dataTransfer.getData('text/plain')) || dragType;
+      if (!droppedType) return;
+      addBlock(droppedType);
+      dragType = null;
+    }
+
+    function addBlock(type, content = '', style = '', options = {}) {
+      const { focus = true, select = true } = options;
+      const id = `block-${++blockIdCounter}`;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'canvas-block';
+      wrapper.dataset.id = id;
+      wrapper.dataset.type = type;
+
+      wrapper.innerHTML = `
+    <div class="block-controls">
+      <button class="block-ctrl-btn" onclick="moveBlock('${id}', -1)" title="Move up">↑</button>
+      <button class="block-ctrl-btn" onclick="moveBlock('${id}', 1)" title="Move down">↓</button>
+      <button class="block-ctrl-btn del" onclick="deleteBlock('${id}')" title="Delete">×</button>
+    </div>
+    ${renderBlockContent(type, content, id, style)}
+  `;
+
+      wrapper.addEventListener('click', () => selectBlock(wrapper));
+      canvas.appendChild(wrapper);
+      updateEmptyState();
+      if (select) selectBlock(wrapper);
+
+      const editable = wrapper.querySelector('[contenteditable], textarea, input[type=text]');
+      if (focus && editable) setTimeout(() => editable.focus(), 50);
+
+      if (type === 'video' && content) setTimeout(() => previewVideo(id), 50);
+    }
+
+    function renderBlockContent(type, content, id, style = '') {
+      const styleAttr = style ? ` style="${style}"` : '';
+      switch (type) {
+        case 'heading':
+          return `<div class="b-heading" contenteditable="true" data-placeholder="Heading..."${styleAttr}>${content || ''}</div>`;
+        case 'subheading':
+          return `<div class="b-subheading" contenteditable="true" data-placeholder="Subheading..."${styleAttr}>${content || ''}</div>`;
+        case 'text':
+          return `<textarea class="b-text" placeholder="Start typing paragraph..."${styleAttr}>${content || ''}</textarea>`;
+        case 'quote':
+          return `<textarea class="b-quote" placeholder="Enter a quote..."${styleAttr}>${content || ''}</textarea>`;
+        case 'divider':
+          return `<div class="b-divider"></div>`;
+        case 'callout':
+          return `<div class="b-callout"><div class="b-callout-icon">💡</div><textarea class="b-callout-text" placeholder="Write a callout note..."${styleAttr}>${content || ''}</textarea></div>`;
+        case 'image':
+          return `
+          <div class="b-image-placeholder" onclick="triggerImageUpload('${id}')" style="text-align:${style && style.includes('text-align:') ? style.split('text-align:')[1].split(';')[0].trim() : 'left'}">
+            <input type="file" id="img-${id}" accept="image/*" onchange="handleImage(this, '${id}')">
+            <div id="img-preview-${id}">
+              ${content
+              ? `<div class="b-image-wrap" id="img-wrap-${id}" style="${style || 'width:100%'};display:inline-block;position:relative"><img src="${content}" alt="Uploaded image" style="width:100%;border-radius:6px;display:block"><div class="b-resize-handle" onmousedown="startImageResize(event, '${id}')"></div></div>`
+              : `<div style="font-size:28px;margin-bottom:8px;opacity:0.4">☐</div><div style="font-size:12px;color:var(--muted)">Click to upload image</div>`}
+            </div>
+          </div>
+        `;
+        case 'video':
+          const savedVideoPreview = content ? (
+            content.startsWith('data:video')
+              ? `<video controls style="width:100%;border-radius:6px;max-height:300px" data-videosrc="${content}"><source src="${content}"></video>`
+              : `<div style="position:relative;width:100%;padding-top:56.25%"><iframe style="position:absolute;inset:0;width:100%;height:100%;border:none;border-radius:6px" src="${content}" allowfullscreen></iframe></div>`
+          ) : '';
+          return `
+        <div class="b-video-placeholder" style="padding:18px;background:var(--surface2);border:2px dashed var(--border);border-radius:8px;margin:4px">
+          <div style="margin-bottom:8px;font-size:12px;color:var(--muted);font-weight:500">Paste URL or upload video</div>
+          <input class="form-input" placeholder="YouTube / Vimeo URL..." id="vid-url-${id}" style="margin-bottom:8px" oninput="previewVideo('${id}')" value="${(!content || content.startsWith('data:')) ? '' : content}">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="font-size:12px;color:var(--muted)">or</span>
+            <label style="cursor:pointer;font-size:12px;color:var(--accent);font-weight:600">
+              Upload from device
+              <input type="file" accept="video/*" style="display:none" onchange="handleVideoUpload(this, '${id}')">
+            </label>
+          </div>
+          <div id="vid-preview-${id}">${savedVideoPreview}</div>
+        </div>
+      `;
+        default:
+          return `<div style="padding:12px">Unknown block</div>`;
+      }
+    }
+
+    function triggerImageUpload(id) {
+      const input = document.getElementById(`img-${id}`);
+      if (input) input.click();
+    }
+
+    function handleImage(input, id) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const preview = document.getElementById(`img-preview-${id}`);
+        if (preview) {
+          preview.innerHTML = `<div class="b-image-wrap" id="img-wrap-${id}" style="width:100%;display:inline-block;position:relative"><img src="${e.target.result}" alt="Uploaded image" style="width:100%;border-radius:6px;display:block"><div class="b-resize-handle" onmousedown="startImageResize(event, '${id}')"></div></div>`;
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function startImageResize(e, id) {
+      e.preventDefault();
+      e.stopPropagation();
+      const wrap = document.getElementById(`img-wrap-${id}`);
+      if (!wrap) return;
+      const canvasEl = document.getElementById('canvas');
+      const canvasRect = canvasEl.getBoundingClientRect();
+      const canvasWidth = canvasRect.width - 56;
+
+      function onMove(ev) {
+        const newWidth = ev.clientX - wrap.getBoundingClientRect().left;
+        let pct = (newWidth / canvasWidth) * 100;
+        pct = Math.max(20, Math.min(100, pct));
+        wrap.style.width = pct + '%';
+      }
+
+      function onUp() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    }
+
+    function startVideoResize(e, id) {
+      e.preventDefault();
+      e.stopPropagation();
+      const wrap = document.getElementById(`vid-wrap-${id}`);
+      if (!wrap) return;
+      const canvasEl = document.getElementById('canvas');
+      const canvasWidth = canvasEl.getBoundingClientRect().width - 56;
+      function onMove(ev) {
+        let pct = ((ev.clientX - wrap.getBoundingClientRect().left) / canvasWidth) * 100;
+        pct = Math.max(20, Math.min(100, pct));
+        wrap.style.width = pct + '%';
+      }
+      function onUp() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    }
+
+    function previewVideo(id) {
+      const input = document.getElementById(`vid-url-${id}`);
+      const preview = document.getElementById(`vid-preview-${id}`);
+      if (!input || !preview) return;
+      const url = input.value.trim();
+      let embedUrl = '';
+      const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (ytMatch) embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
+      const vmMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+      if (!embedUrl && vmMatch) embedUrl = `https://player.vimeo.com/video/${vmMatch[1]}`;
+      if (embedUrl) {
+        preview.innerHTML = `<div class="b-video-wrap-resize" id="vid-wrap-${id}" style="width:100%"><div style="position:relative;width:100%;padding-top:56.25%"><iframe style="position:absolute;inset:0;width:100%;height:100%;border:none;border-radius:6px" src="${embedUrl}" allowfullscreen></iframe></div><div class="b-video-resize-handle" onmousedown="startVideoResize(event, '${id}')"></div></div>`;
+      } else {
+        preview.innerHTML = url ? '<div style="font-size:11px;color:var(--muted);margin-top:4px">Enter a valid YouTube or Vimeo URL</div>' : '';
+      }
+    }
+
+    function handleVideoUpload(input, id) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const preview = document.getElementById(`vid-preview-${id}`);
+        if (preview) {
+          preview.innerHTML = `<div class="b-video-wrap-resize" id="vid-wrap-${id}" style="width:100%"><video controls style="width:100%;border-radius:6px;max-height:300px" data-videosrc="${e.target.result}"><source src="${e.target.result}" type="${file.type}"></video><div class="b-video-resize-handle" onmousedown="startVideoResize(event, '${id}')"></div></div>`;
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function updateEmptyState() {
+      const blocks = canvas.querySelectorAll('.canvas-block');
+      emptyState.style.display = blocks.length ? 'none' : 'flex';
+    }
+
+    function selectBlock(el) {
+      document.querySelectorAll('.canvas-block').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedBlock = el;
+      document.getElementById('no-selection').style.display = 'none';
+      document.getElementById('block-props').style.display = 'block';
+    }
+
+    canvas.addEventListener('click', e => {
+      if (e.target === canvas) {
+        document.querySelectorAll('.canvas-block').forEach(b => b.classList.remove('selected'));
+        selectedBlock = null;
+        document.getElementById('no-selection').style.display = 'block';
+        document.getElementById('block-props').style.display = 'none';
+      }
+    });
+
+    canvas.addEventListener('focusin', e => {
+      const block = e.target.closest('.canvas-block');
+      if (block) selectBlock(block);
+    });
+
+    function setAlign(align, btn) {
+      if (!selectedBlock) return;
+      const editables = selectedBlock.querySelectorAll('[contenteditable], textarea');
+      if (!editables.length) {
+        selectedBlock.style.textAlign = align;
+        const imgPlaceholder = selectedBlock.querySelector('.b-image-placeholder');
+        if (imgPlaceholder) imgPlaceholder.style.textAlign = align;
+        const vidWrap = selectedBlock.querySelector('.b-video-wrap-resize');
+        if (vidWrap) vidWrap.style.textAlign = align;
+        const vidPlaceholder = selectedBlock.querySelector('.b-video-placeholder');
+        if (vidPlaceholder) vidPlaceholder.style.textAlign = align;
+      } else {
+        editables.forEach(el => { el.style.textAlign = align; });
+      }
+      document.querySelectorAll('.align-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function setColor(color, dot) {
+      if (!selectedBlock) return;
+      const editables = selectedBlock.querySelectorAll('[contenteditable], textarea');
+      if (!editables.length) {
+        selectedBlock.style.color = color;
+      } else {
+        editables.forEach(el => { el.style.color = color; });
+      }
+      document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+      dot.classList.add('active');
+    }
+
+    function applyPickerColor(color) {
+      if (!selectedBlock) return;
+      const editables = selectedBlock.querySelectorAll('[contenteditable], textarea');
+      if (!editables.length) {
+        selectedBlock.style.color = color;
+      } else {
+        editables.forEach(el => { el.style.color = color; });
+      }
+      document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+    }
+
+    const FONTS = [
+      { label: 'Default', value: "'Plus Jakarta Sans', sans-serif" },
+      { label: 'Arial', value: 'Arial, sans-serif' },
+      { label: 'Times New Roman', value: "'Times New Roman', serif" },
+      { label: 'Georgia', value: 'Georgia, serif' },
+      { label: 'Courier New', value: "'Courier New', monospace" },
+      { label: 'Verdana', value: 'Verdana, sans-serif' },
+      { label: 'Impact', value: 'Impact, sans-serif' },
+      { label: 'Roboto', value: "'Roboto', sans-serif" },
+      { label: 'Open Sans', value: "'Open Sans', sans-serif" },
+      { label: 'Lato', value: "'Lato', sans-serif" },
+      { label: 'Montserrat', value: "'Montserrat', sans-serif" },
+      { label: 'Oswald', value: "'Oswald', sans-serif" },
+      { label: 'Raleway', value: "'Raleway', sans-serif" },
+      { label: 'Nunito', value: "'Nunito', sans-serif" },
+      { label: 'Ubuntu', value: "'Ubuntu', sans-serif" },
+      { label: 'Poppins', value: "'Poppins', sans-serif" },
+      { label: 'Quicksand', value: "'Quicksand', sans-serif" },
+      { label: 'Josefin Sans', value: "'Josefin Sans', sans-serif" },
+      { label: 'Bebas Neue', value: "'Bebas Neue', sans-serif" },
+      { label: 'Anton', value: "'Anton', sans-serif" },
+      { label: 'Righteous', value: "'Righteous', sans-serif" },
+      { label: 'Merriweather', value: "'Merriweather', serif" },
+      { label: 'Crimson Text', value: "'Crimson Text', serif" },
+      { label: 'EB Garamond', value: "'EB Garamond', serif" },
+      { label: 'Libre Baskerville', value: "'Libre Baskerville', serif" },
+      { label: 'Playfair Display', value: "'Playfair Display', serif" },
+      { label: 'Abril Fatface', value: "'Abril Fatface', serif" },
+      { label: 'Pacifico', value: "'Pacifico', cursive" },
+      { label: 'Dancing Script', value: "'Dancing Script', cursive" },
+      { label: 'Lobster', value: "'Lobster', cursive" },
+      { label: 'Satisfy', value: "'Satisfy', cursive" },
+      { label: 'Caveat', value: "'Caveat', cursive" },
+      { label: 'Permanent Marker', value: "'Permanent Marker', cursive" },
+    ];
+
+    const fontDropdown = document.getElementById('font-dropdown');
+    FONTS.forEach(f => {
+      const opt = document.createElement('div');
+      opt.className = 'custom-font-option';
+      opt.textContent = f.label;
+      opt.style.fontFamily = f.value;
+      opt.dataset.value = f.value;
+      opt.addEventListener('click', () => {
+        setFont(f.value);
+        document.getElementById('font-select-label').textContent = f.label;
+        document.getElementById('font-select-label').style.fontFamily = f.value;
+        document.querySelectorAll('.custom-font-option').forEach(o => o.classList.remove('active'));
+        opt.classList.add('active');
+        closeFontDropdown();
+      });
+      fontDropdown.appendChild(opt);
+    });
+
+    function toggleFontDropdown() { fontDropdown.classList.toggle('open'); }
+    function closeFontDropdown() { fontDropdown.classList.remove('open'); }
+
+    document.addEventListener('click', e => {
+      if (!document.getElementById('font-select-wrap').contains(e.target)) closeFontDropdown();
+    });
+
+    function setFont(font) {
+      if (!selectedBlock) return;
+      const editables = selectedBlock.querySelectorAll('[contenteditable], textarea');
+      if (!editables.length) {
+        selectedBlock.style.fontFamily = font;
+      } else {
+        editables.forEach(el => { el.style.fontFamily = font; });
+      }
+    }
+
+    function deleteSelected() {
+      if (selectedBlock) deleteBlock(selectedBlock.dataset.id);
+    }
+
+    function deleteBlock(id) {
+      const el = document.querySelector(`[data-id="${id}"]`);
+      if (!el) return;
+      el.remove();
+      selectedBlock = null;
+      document.getElementById('no-selection').style.display = 'block';
+      document.getElementById('block-props').style.display = 'none';
+      updateEmptyState();
+    }
+
+    function moveBlock(id, dir) {
+      const el = document.querySelector(`[data-id="${id}"]`);
+      if (!el) return;
+      if (dir === -1 && el.previousElementSibling) canvas.insertBefore(el, el.previousElementSibling);
+      else if (dir === 1 && el.nextElementSibling) canvas.insertBefore(el.nextElementSibling, el);
+    }
+
+    function serializeCanvas() {
+      const blocks = [];
+      document.querySelectorAll('.canvas-block').forEach(block => {
+        const type = block.dataset.type;
+        let content = '';
+        let style = '';
+
+        if (type === 'image') {
+          const imgEl = block.querySelector('img');
+          const wrapEl = block.querySelector('.b-image-wrap');
+          content = imgEl ? imgEl.src : '';
+          const wrapWidth = wrapEl ? (wrapEl.style.width || '100%') : '100%';
+          const blockAlign = block.querySelector('.b-image-placeholder')?.style.textAlign || '';
+          style = `width:${wrapWidth}${blockAlign ? ';text-align:' + blockAlign : ''}`;
+          blocks.push({ type, content, style });
+          return;
+        }
+
+        if (type === 'video') {
+          const videoEl = block.querySelector('video');
+          const iframe = block.querySelector('iframe');
+          const vidInput = block.querySelector('input[id^="vid-url-"]');
+          if (videoEl) {
+            content = videoEl.getAttribute('data-videosrc') || videoEl.querySelector('source')?.getAttribute('src') || '';
+          } else if (iframe) {
+            content = iframe.src;
+          } else if (vidInput) {
+            content = vidInput.value;
+          }
+          const vidWrapEl = block.querySelector('.b-video-wrap-resize');
+          const vidWidth = vidWrapEl ? (vidWrapEl.style.width || '100%') : '100%';
+          const vidAlign = block.querySelector('.b-video-wrap-resize')?.style.textAlign || block.querySelector('.b-video-placeholder')?.style.textAlign || '';
+          blocks.push({ type, content, style: `width:${vidWidth}${vidAlign ? ';text-align:' + vidAlign : ''}` });
+          return;
+        }
+
+        const editable = block.querySelector('[contenteditable]');
+        const textarea = block.querySelector('textarea');
+        const img = block.querySelector('img');
+        if (editable) content = editable.innerHTML;
+        else if (textarea) content = textarea.value;
+        else if (img) content = img.src;
+        style = editable ? (editable.style.cssText || editable.getAttribute('style') || '') : (textarea ? (textarea.style.cssText || textarea.getAttribute('style') || '') : '');
+        blocks.push({ type, content, style });
+      });
+      return blocks;
+    }
+
+    function loadPageIntoCanvas(page) {
+      clearCanvasBlocks();
+      pageTitleInput.value = page.title || '';
+      const layout = Array.isArray(page.layout) ? page.layout : [];
+      layout.forEach((block, index) => {
+        addBlock(block.type, block.content || '', block.style || '', {
+          focus: false,
+          select: index === layout.length - 1,
+        });
+      });
+      updateEmptyState();
+    }
+
+    function editSavedPage(id) {
+      const page = myPages.find(p => String(p.id) === String(id));
+      if (!page) { showToast('Page not found', 'error'); return; }
+      editingPageId = page.id;
+      loadPageIntoCanvas(page);
+      setBuilderMode();
+      loadSavedPages();
+      showToast(`Editing "${page.title}"`, 'success');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function viewSavedPage(id) { window.open(`pages.html?id=${id}`, '_blank'); }
+
+    async function deleteSavedPage(id) {
+      if (!confirm('Delete this page permanently?')) return;
+      try {
+        await apiCall(`/pages/${id}`, 'DELETE');
+        if (String(editingPageId) === String(id)) {
+          editingPageId = null;
+          pageTitleInput.value = '';
+          clearCanvasBlocks();
+          setBuilderMode();
+        }
+        showToast('Page deleted', 'success');
+        loadSavedPages();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function savePage() {
+      const title = pageTitleInput.value.trim();
+      if (!title) { showToast('Give your page a title', 'error'); return; }
+      const layout = serializeCanvas();
+      if (layout.length === 0) { showToast('Add some blocks first', 'error'); return; }
+
+      try {
+        if (editingPageId) {
+          await apiCall(`/pages/${editingPageId}`, 'PUT', { title, layout });
+          showToast('Page updated!', 'success');
+        } else {
+          const saved = await apiCall('/pages', 'POST', { title, layout });
+          editingPageId = saved.id;
+          setBuilderMode();
+          showToast('Page saved!', 'success');
+        }
+        loadSavedPages();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    function renderPreviewBlocks(blocks) {
+      return blocks.map(b => {
+        switch (b.type) {
+          case 'heading':
+            return `<h1 style="font-size:28px;font-weight:800;letter-spacing:-0.5px;margin:20px 0 10px;${b.style || ''}">${b.content || ''}</h1>`;
+          case 'subheading':
+            return `<h2 style="font-size:20px;font-weight:700;margin:16px 0 8px;${b.style || ''}">${b.content || ''}</h2>`;
+          case 'text':
+            return `<p style="font-size:15px;line-height:1.8;margin-bottom:14px;${b.style || ''}">${(b.content || '').replace(/\n/g, '<br>')}</p>`;
+          case 'quote':
+            return `<blockquote style="border-left:3px solid #2563eb;padding:14px 20px;font-style:italic;font-size:16px;color:#64748b;margin:20px 0;${b.style || ''}">${(b.content || '').replace(/\n/g, '<br>')}</blockquote>`;
+          case 'divider':
+            return `<hr style="border:none;height:1px;background:#e5e5e5;margin:28px 0;">`;
+          case 'callout':
+            return `<div style="background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.15);border-radius:8px;padding:14px 18px;margin:14px 0;${b.style || ''}">💡 ${(b.content || '').replace(/\n/g, '<br>')}</div>`;
+          case 'image':
+            if (!b.content) return '';
+            const iw = b.style ? b.style.replace('width:', '').trim() : '100%';
+            return `<img src="${b.content}" style="width:${iw};max-width:100%;border-radius:8px;margin:14px 0;display:block;" alt="">`;
+          case 'video':
+            if (!b.content) return '';
+            if (b.content.startsWith('data:video')) {
+              return `<video controls style="width:100%;border-radius:6px;margin:14px 0;max-height:400px"><source src="${b.content}"></video>`;
+            }
+            return `<div style="position:relative;width:100%;padding-top:56.25%;margin:14px 0"><iframe style="position:absolute;inset:0;width:100%;height:100%;border:none;border-radius:6px" src="${b.content}" allowfullscreen></iframe></div>`;
+          default: return '';
+        }
+      }).join('');
+    }
+
+    function previewPage() {
+      const title = pageTitleInput.value || 'Preview';
+      const blocks = serializeCanvas();
+      const html = renderPreviewBlocks(blocks);
+
+      const preview = window.open('', '_blank');
+      preview.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8"><title>${title}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body{font-family:'Plus Jakarta Sans',sans-serif;max-width:720px;margin:48px auto;padding:0 24px;color:#1a1a1a;background:#fafafa}</style>
+  </head><body><h1 style="font-size:32px;font-weight:800;letter-spacing:-0.5px;margin-bottom:40px">${title}</h1>${html}</bo` + `dy></ht` + `ml>`);
+      preview.document.close();
+    }
+
+    async function loadSavedPages() {
+      const el = document.getElementById('saved-pages-list');
+      try {
+        myPages = await apiCall('/my-pages');
+        if (myPages.length === 0) {
+          el.innerHTML = `<div style="font-size:11px;color:var(--muted)">No pages yet</div>`;
+          return;
+        }
+
+        el.innerHTML = myPages.map(p => `
+      <div class="saved-page-item ${String(editingPageId) === String(p.id) ? 'editing' : ''}">
+        <div class="saved-page-main">
+          <span class="saved-page-title">${p.title}</span>
+          <span class="saved-page-date">${new Date(p.created_at).toLocaleDateString()}</span>
+        </div>
+        <div class="saved-page-actions">
+          <button class="saved-page-btn" onclick="editSavedPage(${p.id})">Edit</button>
+          <button class="saved-page-btn" onclick="viewSavedPage(${p.id})">View</button>
+          <button class="saved-page-btn danger" onclick="deleteSavedPage(${p.id})">Delete</button>
+        </div>
+      </div>
+    `).join('');
+      } catch (err) {
+        el.innerHTML = `<div style="font-size:11px;color:var(--muted)">Error: ${err.message}</div>`;
+      }
+    }
+
+    setBuilderMode();
+    loadSavedPages();
+  </script>
+</body>
+
+</html>
